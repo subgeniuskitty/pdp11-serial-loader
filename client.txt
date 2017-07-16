@@ -1,0 +1,40 @@
+© 2017 Aaron Taylor <ataylor at subgeniuskitty dot com>
+See LICENSE file for copyright and license details.
+
+This is a loader for the PDP-11. It is designed to work in conjunction with the server.c
+program, also found in this directory.
+
+Notes:
+  - Configure the loader by setting the registers to different values.
+  - Program is position independent. Addresses are only examples.
+  - All addresses and values are octal.
+
+Address |  Value | Instruction      | Description
+===============================================================================================
+     R0 |   1000 |                  | Starting memory address to store transferred data
+     R1 |   xxxx |                  | Number of bytes to transfer (displayed by server.c)
+     R2 | 176540 |                  | Address of RCSR register for SLU
+     R3 |   1000 |                  | Address for program execution after transfer is complete 
+  70000 | 105712 | TSTB (R2)        | Set N=1 in PSW when SLU contains received byte
+  70002 | 100376 | BPL -> 70000     | Loop until SLU has another byte ready to read
+  70004 | 116220 | MOVB X(R2) (R0)+ | Copy byte from SLU to memory and increment location
+  70006 |      2 |   X=2            | RCSR + 2 = RBUF
+  70010 | 005301 | DEC R1           | Decrement number of bytes remaining to receive
+  70012 | 005701 | TST R1           | Set Z=1 in PSW after receiving last byte
+  70014 | 001371 | BNE -> 70000     | Loop until all bytes are transferred
+  70016 | 010307 | MOV R3 R7        | Set new PC and begin execution of new instructions
+
+If you suspect data transfer problems, the following program will generate a checksum which
+should match that displayed by server.c during the transfer. Remember to halt after loading
+the image so it remains unmodified.
+
+Address |  Value | Instruction      | Description
+===============================================================================================
+     R0 |   1000 |                  | Starting memory address
+     R4 |   xxxx |                  | Number of words (not bytes!) to check
+     R5 |      0 |                  | Checksum will be here after program terminates
+  71000 | 062005 | ADD (R0)+ R5     | Add word to checksum
+  71002 | 005304 | DEC R4           | Decrement number of words to check
+  71004 | 005704 | TST R4           | Set Z=1 in PSW after checking last word
+  71006 | 001374 | BNE -> 71000     | Loop until all words are checked
+  71010 | 000000 | HALT             | Halt so user can examine checksum in R5
