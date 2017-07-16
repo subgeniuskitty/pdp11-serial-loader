@@ -37,7 +37,7 @@ Initiate the transfer from the UNIX host with the command
 
 where <port> is the path to the device file for the serial port connected to the 
 PDP-11 and <binary> is the path to the binary image file. For example, if using 
-the second serial port under FreeBSD and a binary image named "pdp11.bin",
+the first serial port under FreeBSD and a binary image named "pdp11.bin",
 execute this command.
 
     pdp11-serial-loader -i pdp11.bin -o /dev/cuau0
